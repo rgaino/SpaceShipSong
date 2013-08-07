@@ -52,12 +52,32 @@
         var assets_guitar_solo_track = "assets/guitar_solo.mp3";
         var assets_percussion_track = "assets/percussion.mp3";
 
-        // var src = assets_drums_track;
-        
 
-        var soundInstance;      // the sound instance we create
-        var analyserNode;       // the analyser node that allows us to visualize the audio
-        var freqFloatData, freqByteData, timeByteData;  // arrays to retrieve data from analyserNode
+        // the sound instances for each track
+        var sound_instance_bass_track;
+        var sound_instance_drums_track;
+        var sound_instance_guitar_chords_track;
+        var sound_instance_guitar_lead_track;
+        var sound_instance_guitar_solo_track;
+        var sound_instance_percussion;
+
+        // the analyser nodes that allows us to visualize the audio
+        var analyser_node_bass_track;
+        var analyser_node_drums_track;
+        var analyser_node_guitar_chords_track;
+        var analyser_node_guitar_lead_track;
+        var analyser_node_guitar_solo_track;
+        var analyser_node_percussion_track;
+
+
+        // arrays to retrieve data from analyserNode
+        var freq_float_data_bass_track, freq_byte_data_bass_track, time_byte_data_bass_track;  
+        var freq_float_data_drums_track, freq_byte_data_drums_track, time_byte_data_drums_track;  
+        var freq_float_data_guitar_chords_track, freq_byte_data_guitar_chords_track, time_byte_data_guitar_chords_track;  
+        var freq_float_data_guitar_lead_track, freq_byte_data_guitar_lead_track, time_byte_data_guitar_lead_track;  
+        var freq_float_data_guitar_solo_track, freq_byte_data_guitar_solo_track, time_byte_data_guitar_solo_track;  
+        var freq_float_data_percussion_track, freq_byte_data_percussion_track, time_byte_data_percussion_track;  
+
 
         function init() {
             if (window.top != window) {
@@ -106,26 +126,6 @@
 
             console.log(evt.src + " loaded.");
 
-            // get the context.  NOTE to connect to existing nodes we need to work in the same context.
-            var context = createjs.WebAudioPlugin.context;
-
-            // create an analyser node
-            analyserNode = context.createAnalyser();
-            analyserNode.fftSize = FFTSIZE;  //The size of the FFT used for frequency-domain analysis. This must be a power of two
-            analyserNode.smoothingTimeConstant = 0.85;  //A value from 0 -> 1 where 0 represents no time averaging with the last analysis frame
-            analyserNode.connect(context.destination);  // connect to the context.destination, which outputs the audio
-
-            // attach visualizer node to our existing dynamicsCompressorNode, which was connected to context.destination
-            var dynamicsNode = createjs.WebAudioPlugin.dynamicsCompressorNode;
-            dynamicsNode.disconnect();  // disconnect from destination
-            dynamicsNode.connect(analyserNode);
-
-            // set up the arrays that we use to retrieve the analyserNode data
-            freqFloatData = new Float32Array(analyserNode.frequencyBinCount);
-            freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
-            timeByteData = new Uint8Array(analyserNode.frequencyBinCount);
-
-
             // enable touch interactions if supported on the current device, and display appropriate message
             if (createjs.Touch.enable(stage)) {
                 messageField.text = "Touch to start";
@@ -143,19 +143,87 @@
             // we only start once, so remove the click/touch listener
             stage.removeEventListener("stagemousedown", startPlayback);
 
-            if(soundInstance) {return;} // if this is defined, we've already started playing.  This is very unlikely to happen.
+            if(sound_instance_bass_track || sound_instance_drums_track || sound_instance_guitar_chords_track || 
+                sound_instance_guitar_lead_track || sound_instance_guitar_solo_track || sound_instance_percussion) {
+                return; // if this is defined, we've already started playing.  This is very unlikely to happen.
+            } 
 			
             // we're starting, so we can remove the message
             stage.removeChild(messageField);
 
-            // start playing the sound we just loaded, looping indefinitely
-            // soundInstance = createjs.Sound.play(src, null, null, 0, -1);
-            createjs.Sound.play(assets_bass_track);            
-            createjs.Sound.play(assets_drums_track);            
-            createjs.Sound.play(assets_guitar_chords_track);            
-            createjs.Sound.play(assets_guitar_lead_track);            
-            createjs.Sound.play(assets_guitar_solo_track);            
-            createjs.Sound.play(assets_percussion_track);            
+            //play the sounds loaded, and assign them to the sound_instances vars
+            sound_instance_bass_track = createjs.Sound.play(assets_bass_track);            
+            sound_instance_drums_track = createjs.Sound.play(assets_drums_track);            
+            sound_instance_guitar_chords_track = createjs.Sound.play(assets_guitar_chords_track);            
+            sound_instance_guitar_lead_track = createjs.Sound.play(assets_guitar_lead_track);            
+            sound_instance_guitar_solo_track = createjs.Sound.play(assets_guitar_solo_track);            
+            sound_instance_percussion = createjs.Sound.play(assets_percussion_track);            
+
+
+            // create the analyser nodes for each track
+            var context = createjs.WebAudioPlugin.context;
+
+            // this code below is really dumb, I'm basically duplicating code for each track. 
+            // to-do: make this smarter
+
+            //BASS
+            analyser_node_bass_track = context.createAnalyser();
+            sound_instance_bass_track.gainNode.disconnect();  // from panNode
+            sound_instance_bass_track.gainNode.connect(analyser_node_bass_track);
+            analyser_node_bass_track.fftSize = FFTSIZE;  //The size of the FFT used for frequency-domain analysis. This must be a power of two
+            analyser_node_bass_track.smoothingTimeConstant = 0.85;  //A value from 0 -> 1 where 0 represents no time averaging with the last analysis frame
+            analyser_node_bass_track.connect(sound_instance_bass_track.panNode);
+
+            freq_float_data_bass_track = new Float32Array(analyser_node_bass_track.frequencyBinCount);
+            freq_byte_data_bass_track = new Uint8Array(analyser_node_bass_track.frequencyBinCount);
+            time_byte_data_bass_track = new Uint8Array(analyser_node_bass_track.frequencyBinCount);
+
+
+            //DRUMS (later)
+
+            //GUITAR CHORDS
+            analyser_node_guitar_chords_track = context.createAnalyser();
+            sound_instance_guitar_chords_track.gainNode.disconnect();  // from panNode
+            sound_instance_guitar_chords_track.gainNode.connect(analyser_node_guitar_chords_track);
+            analyser_node_guitar_chords_track.fftSize = FFTSIZE;  //The size of the FFT used for frequency-domain analysis. This must be a power of two
+            analyser_node_guitar_chords_track.smoothingTimeConstant = 0.85;  //A value from 0 -> 1 where 0 represents no time averaging with the last analysis frame
+            analyser_node_guitar_chords_track.connect(sound_instance_guitar_chords_track.panNode);
+
+            freq_float_data_guitar_chords_track = new Float32Array(analyser_node_guitar_chords_track.frequencyBinCount);
+            freq_byte_data_guitar_chords_track = new Uint8Array(analyser_node_guitar_chords_track.frequencyBinCount);
+            time_byte_data_guitar_chords_track = new Uint8Array(analyser_node_guitar_chords_track.frequencyBinCount);
+
+
+            //GUITAR LEAD
+            analyser_node_guitar_lead_track = context.createAnalyser();
+            sound_instance_guitar_lead_track.gainNode.disconnect();  // from panNode
+            sound_instance_guitar_lead_track.gainNode.connect(analyser_node_guitar_lead_track);
+            analyser_node_guitar_lead_track.fftSize = FFTSIZE;  //The size of the FFT used for frequency-domain analysis. This must be a power of two
+            analyser_node_guitar_lead_track.smoothingTimeConstant = 0.85;  //A value from 0 -> 1 where 0 represents no time averaging with the last analysis frame
+            analyser_node_guitar_lead_track.connect(sound_instance_guitar_lead_track.panNode);
+
+            freq_float_data_guitar_lead_track = new Float32Array(analyser_node_guitar_lead_track.frequencyBinCount);
+            freq_byte_data_guitar_lead_track = new Uint8Array(analyser_node_guitar_lead_track.frequencyBinCount);
+            time_byte_data_guitar_lead_track = new Uint8Array(analyser_node_guitar_lead_track.frequencyBinCount);
+
+
+            //GUITAR SOLO
+            analyser_node_guitar_solo_track = context.createAnalyser();
+            sound_instance_guitar_solo_track.gainNode.disconnect();  // from panNode
+            sound_instance_guitar_solo_track.gainNode.connect(analyser_node_guitar_solo_track);
+            analyser_node_guitar_solo_track.fftSize = FFTSIZE;  //The size of the FFT used for frequency-domain analysis. This must be a power of two
+            analyser_node_guitar_solo_track.smoothingTimeConstant = 0.85;  //A value from 0 -> 1 where 0 represents no time averaging with the last analysis frame
+            analyser_node_guitar_solo_track.connect(sound_instance_guitar_solo_track.panNode);
+
+            freq_float_data_guitar_solo_track = new Float32Array(analyser_node_guitar_solo_track.frequencyBinCount);
+            freq_byte_data_guitar_solo_track = new Uint8Array(analyser_node_guitar_solo_track.frequencyBinCount);
+            time_byte_data_guitar_solo_track = new Uint8Array(analyser_node_guitar_solo_track.frequencyBinCount);
+
+        // var freq_float_data_drums_track, freq_byte_data_drums_track, time_byte_data_drums_track;  
+        // var freq_float_data_percussion_track, freq_byte_data_percussion_track, time_byte_data_percussion_track;  
+
+
+
 
             for(var i=0; i<FFTSIZE/2; i++) {
                 freqBars[i] = new createjs.Shape();
@@ -180,9 +248,21 @@
 
         function tick(evt) {
 
-            analyserNode.getFloatFrequencyData(freqFloatData);  // this gives us the dBs
-            analyserNode.getByteFrequencyData(freqByteData);  // this gives us the frequency
-            analyserNode.getByteTimeDomainData(timeByteData);  // this gives us the waveform
+            analyser_node_bass_track.getFloatFrequencyData(freq_float_data_bass_track);  // this gives us the dBs
+            analyser_node_bass_track.getByteFrequencyData(freq_byte_data_bass_track);  // this gives us the frequency
+            analyser_node_bass_track.getByteTimeDomainData(time_byte_data_bass_track);  // this gives us the waveform
+
+            analyser_node_guitar_chords_track.getFloatFrequencyData(freq_float_data_guitar_chords_track);  // this gives us the dBs
+            analyser_node_guitar_chords_track.getByteFrequencyData(freq_byte_data_guitar_chords_track);  // this gives us the frequency
+            analyser_node_guitar_chords_track.getByteTimeDomainData(time_byte_data_guitar_chords_track);  // this gives us the waveform
+
+            analyser_node_guitar_lead_track.getFloatFrequencyData(freq_float_data_guitar_lead_track);  // this gives us the dBs
+            analyser_node_guitar_lead_track.getByteFrequencyData(freq_byte_data_guitar_lead_track);  // this gives us the frequency
+            analyser_node_guitar_lead_track.getByteTimeDomainData(time_byte_data_guitar_lead_track);  // this gives us the waveform
+
+            analyser_node_guitar_solo_track.getFloatFrequencyData(freq_float_data_guitar_solo_track);  // this gives us the dBs
+            analyser_node_guitar_solo_track.getByteFrequencyData(freq_byte_data_guitar_solo_track);  // this gives us the frequency
+            analyser_node_guitar_solo_track.getByteTimeDomainData(time_byte_data_guitar_solo_track);  // this gives us the waveform
 
             // console.log(timeByteData.length + "-" + freqByteData.length + "-" + freqFloatData.length);
             // console.log(freqByteData);
@@ -191,6 +271,16 @@
 
             for(var i=0; i<FFTSIZE/2; i++) {
 
+                
+                var freqBar = freqBars[i];
+                freqBar.graphics = new createjs.Graphics().beginFill("#ff0000").drawRect((freqBarWidth + freqBarSpacing) * i, 0, freqBarWidth, freq_byte_data_bass_track[i]);
+
+                var waveBar = waveBars[i];
+                waveBar.graphics = new createjs.Graphics().beginFill("#E6ED11").drawRect(((freqBarWidth + freqBarSpacing) * i) + totalGraphWidth, 0, freqBarWidth, freq_byte_data_guitar_lead_track[i]);
+
+                var dbBar = dbBars[i];
+                dbBar.graphics = new createjs.Graphics().beginFill("#11ED48").drawRect(((freqBarWidth + freqBarSpacing) * i) + (totalGraphWidth*2), 0, freqBarWidth, freq_byte_data_guitar_solo_track[i]);
+/*
                 var freqBar = freqBars[i];
                 freqBar.graphics = new createjs.Graphics().beginFill("#ff0000").drawRect((freqBarWidth + freqBarSpacing) * i, 0, freqBarWidth, freqByteData[i]);
 
@@ -199,7 +289,7 @@
 
                 var dbBar = dbBars[i];
                 dbBar.graphics = new createjs.Graphics().beginFill("#11ED48").drawRect(((freqBarWidth + freqBarSpacing) * i) + (totalGraphWidth*2), 0, freqBarWidth, freqFloatData[i] * -1);
-                   
+*/
             }
 
             // draw the updates to stage
