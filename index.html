@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>test</title>
+
+	<link rel="stylesheet" type="text/css" href="assets/demoStyles.css" />
+</head>
+
+<body onload="init()">
+
+	<header id="header" class="SoundJS">
+	</header>
+
+	<div id="error">
+		<h1>Sorry!</h1>
+		<p>SoundJS or Web Audio is not currently supported in your browser.
+        Currently only Chrome and iOS6 Safari support the Web Audio API, and content must be run from a server.</p>
+		<p>Please <a href="http://github.com/CreateJS/SoundJS/issues" target="_blank">log a bug</a>
+			with the device and browser you are using if you see this in Chrome or Safari.  Thank you.</p>
+	</div>
+
+    <div class="canvasHolder">
+        <canvas id="testCanvas" width="1960" height="1400"></canvas>
+    </div>
+
+    <script type="text/javascript" src="assets/easeljs-NEXT.min.js"></script>
+    <script type="text/javascript" src="src/easeljs/events/EventDispatcher.js"></script>
+    <script type="text/javascript" src="src/soundjs/Sound.js"></script>
+    <script type="text/javascript" src="src/soundjs/WebAudioPlugin.js"></script>
+
+    <script>
+        // global constants
+        var FFTSIZE = 32;      // number of samples for the analyser node FFT, min 32
+        var TICK_FREQ = 20;     // how often to run the tick function, in milliseconds
+
+        // global variables
+        var stage;              // the stage we draw everything to
+        var freqBars = [];
+        var waveBars = [];
+        var dbBars = [];
+
+        var freqBarWidth = 10;
+        var freqBarSpacing = 5;
+
+        var messageField;       // Message display field
+        
+        // set up our sources
+        var assets_bass_track = "assets/bass.mp3";
+        var assets_drums_track = "assets/drums.mp3";
+        var assets_guitar_chords_track = "assets/guitar_chords.mp3";
+        var assets_guitar_lead_track = "assets/guitar_lead.mp3";
+        var assets_guitar_solo_track = "assets/guitar_solo.mp3";
+        var assets_percussion_track = "assets/percussion.mp3";
+
+        // var src = assets_drums_track;
+        
+
+        var soundInstance;      // the sound instance we create
+        var analyserNode;       // the analyser node that allows us to visualize the audio
+        var freqFloatData, freqByteData, timeByteData;  // arrays to retrieve data from analyserNode
+
+        function init() {
+            if (window.top != window) {
+                document.getElementById("header").style.display = "none";
+            }
+
+            // Web Audio only demo, so we register just the WebAudioPlugin and if that fails, display fail message
+            if (!createjs.Sound.registerPlugin(createjs.WebAudioPlugin)) {
+                document.getElementById("error").style.display = "block";
+                return;
+            }
+
+            // create a new stage and point it at our canvas:
+            var canvas = document.getElementById("testCanvas");
+            stage = new createjs.Stage(canvas);
+
+            // set the width and height, so we only have to access this data once (quicker)
+            h = canvas.height;
+            w = canvas.width;
+            // calculate the center point, so we only have to do this math once (quicker)
+            centerX = w >> 1;
+            centerY = h >> 1;
+            
+            // a message on our stage that we use to let the user know what is going on.  Useful when preloading.
+            messageField = new createjs.Text("Loading Audio", "bold 24px Arial", "#FFFFFF");
+            messageField.maxWidth = w;
+            messageField.textAlign = "center";  // NOTE this puts the registration point of the textField at the center
+            messageField.x = centerX;
+            messageField.y = centerY;
+            stage.addChild(messageField);
+            stage.update(); 	//update the stage to show text
+
+            createjs.Sound.addEventListener("fileload", createjs.proxy(handleLoad,this)); // add an event listener for when load is completed
+
+            // register tracks, which preloads by default
+            createjs.Sound.registerSound(assets_bass_track);  
+            createjs.Sound.registerSound(assets_drums_track);  
+            createjs.Sound.registerSound(assets_guitar_chords_track);  
+            createjs.Sound.registerSound(assets_guitar_lead_track);  
+            createjs.Sound.registerSound(assets_guitar_solo_track);  
+            createjs.Sound.registerSound(assets_percussion_track);  
+
+        }
+
+        function handleLoad(evt) {
+
+            console.log(evt.src + " loaded.");
+
+            // get the context.  NOTE to connect to existing nodes we need to work in the same context.
+            var context = createjs.WebAudioPlugin.context;
+
+            // create an analyser node
+            analyserNode = context.createAnalyser();
+            analyserNode.fftSize = FFTSIZE;  //The size of the FFT used for frequency-domain analysis. This must be a power of two
+            analyserNode.smoothingTimeConstant = 0.85;  //A value from 0 -> 1 where 0 represents no time averaging with the last analysis frame
+            analyserNode.connect(context.destination);  // connect to the context.destination, which outputs the audio
+
+            // attach visualizer node to our existing dynamicsCompressorNode, which was connected to context.destination
+            var dynamicsNode = createjs.WebAudioPlugin.dynamicsCompressorNode;
+            dynamicsNode.disconnect();  // disconnect from destination
+            dynamicsNode.connect(analyserNode);
+
+            // set up the arrays that we use to retrieve the analyserNode data
+            freqFloatData = new Float32Array(analyserNode.frequencyBinCount);
+            freqByteData = new Uint8Array(analyserNode.frequencyBinCount);
+            timeByteData = new Uint8Array(analyserNode.frequencyBinCount);
+
+
+            // enable touch interactions if supported on the current device, and display appropriate message
+            if (createjs.Touch.enable(stage)) {
+                messageField.text = "Touch to start";
+            } else {
+                messageField.text = "Click to start";
+            }
+            stage.update(); 	//update the stage to show text
+
+            // wrap our sound playing in a click event so we can be played on mobile devices
+            stage.addEventListener("stagemousedown", startPlayback);
+        }
+
+        // this will start our playback in response to a user click, allowing this demo to work on mobile devices
+        function startPlayback(evt) {
+            // we only start once, so remove the click/touch listener
+            stage.removeEventListener("stagemousedown", startPlayback);
+
+            if(soundInstance) {return;} // if this is defined, we've already started playing.  This is very unlikely to happen.
+			
+            // we're starting, so we can remove the message
+            stage.removeChild(messageField);
+
+            // start playing the sound we just loaded, looping indefinitely
+            // soundInstance = createjs.Sound.play(src, null, null, 0, -1);
+            createjs.Sound.play(assets_bass_track);            
+            createjs.Sound.play(assets_drums_track);            
+            createjs.Sound.play(assets_guitar_chords_track);            
+            createjs.Sound.play(assets_guitar_lead_track);            
+            createjs.Sound.play(assets_guitar_solo_track);            
+            createjs.Sound.play(assets_percussion_track);            
+
+            for(var i=0; i<FFTSIZE/2; i++) {
+                freqBars[i] = new createjs.Shape();
+                stage.addChild(freqBars[i]);
+            }
+
+            for(var i=0; i<FFTSIZE/2; i++) {
+                waveBars[i] = new createjs.Shape();
+                stage.addChild(waveBars[i]);
+            }
+
+            for(var i=0; i<FFTSIZE/2; i++) {
+                dbBars[i] = new createjs.Shape();
+                stage.addChild(dbBars[i]);
+            }
+
+ 
+            // start the tick and point it at the window so we can do some work before updating the stage:
+            createjs.Ticker.addEventListener("tick", tick);
+            createjs.Ticker.setInterval(TICK_FREQ);
+        }
+
+        function tick(evt) {
+
+            analyserNode.getFloatFrequencyData(freqFloatData);  // this gives us the dBs
+            analyserNode.getByteFrequencyData(freqByteData);  // this gives us the frequency
+            analyserNode.getByteTimeDomainData(timeByteData);  // this gives us the waveform
+
+            // console.log(timeByteData.length + "-" + freqByteData.length + "-" + freqFloatData.length);
+            // console.log(freqByteData);
+
+            var totalGraphWidth = ((freqBarWidth+freqBarSpacing) * (FFTSIZE/2)) + 10;
+
+            for(var i=0; i<FFTSIZE/2; i++) {
+
+                var freqBar = freqBars[i];
+                freqBar.graphics = new createjs.Graphics().beginFill("#ff0000").drawRect((freqBarWidth + freqBarSpacing) * i, 0, freqBarWidth, freqByteData[i]);
+
+                var waveBar = waveBars[i];
+                waveBar.graphics = new createjs.Graphics().beginFill("#E6ED11").drawRect(((freqBarWidth + freqBarSpacing) * i) + totalGraphWidth, 0, freqBarWidth, timeByteData[i]);
+
+                var dbBar = dbBars[i];
+                dbBar.graphics = new createjs.Graphics().beginFill("#11ED48").drawRect(((freqBarWidth + freqBarSpacing) * i) + (totalGraphWidth*2), 0, freqBarWidth, freqFloatData[i] * -1);
+                   
+            }
+
+            // draw the updates to stage
+            stage.update();
+        }
+
+    </script>
+
+</body>
+</html>
