@@ -1,7 +1,7 @@
 ## Music visualization using multiple tracks
 
-This is a visualization of multiple audio tracks playing simultaneously using [CreateJS](http://www.createjs.com/#!/CreateJS).
+This is a visualization of multiple audio tracks playing simultaneously using WebAudio.
 
-The code is pretty bad at this moment, lots of unused variables, but it works and is easy to understand.
+"Spaceship Song" by João Erbetta: https://soundcloud.com/joaoerbetta/spaceship-song
 
-You can see the live demo [here](http://www.rgaino.com/experiments/spaceshipsong/).
+João was very kind to let give me the song in separate tracks. Under the folder audio you have all separate instruments, and the full song mp3 for reference.
