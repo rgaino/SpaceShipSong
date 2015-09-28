@@ -17,9 +17,11 @@ function createScene() {
                         0xFF66FF,
                         0xFF9900,
                         0x0066FF,
-                        0xFFFF00,
+                        0x000033,
                         0xB82E00];
-  var groupY = -20;
+  var trackViewNames = ['drums', 'bass', 'base guitar', 'lead guitar', 'solo guitar', 'percussion'];
+
+  var groupY = -25;
 
   for(var trackNumber=0; trackNumber<trackCount; trackNumber++) {
 
@@ -45,7 +47,25 @@ function createScene() {
       group.add(cube);
     }
 
+    xPosition += (xPositionOffset + cube.scale.x);
+
+    var textParams = {
+            					size: 2,
+            					height: 1,
+            					curveSegments: 2,
+            					font: "helvetiker"
+            				};
+
+    var trackNameGeometry = new THREE.TextGeometry(trackViewNames[trackNumber], textParams);
+    var textMaterial = new THREE.MeshBasicMaterial( { color: trackViewColor[trackNumber] } );
+    var text3D = new THREE.Mesh( trackNameGeometry, textMaterial );
+    text3D.position.x = xPosition;
+    text3D.position.y = groupY;
+
+    group.add(text3D);
+
     trackViewGroups[trackNumber] = group;
+
     scene.add(group);
     groupY += 10;
   }
@@ -62,7 +82,7 @@ function createScene() {
         // look for the current bar for the current track group
         //they are named 0.0, 0.1, 0.2... 1.0, 1.1, 1.2,... etc.
         var cube = scene.getObjectByName( trackNumber + '.' + i, true );
-        cube.scale.y = (freqByteData[trackNumber][i] / 100) + 1;
+        cube.scale.y = (freqByteData[trackNumber][i] / 100) ;
       }
     }
 
