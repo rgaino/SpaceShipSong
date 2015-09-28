@@ -7,6 +7,7 @@ function createScene() {
   var scene = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
   var renderer = new THREE.WebGLRenderer();
+  renderer.setClearColor( 0xEBF0F5 );
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild( renderer.domElement );
 
@@ -17,7 +18,7 @@ function createScene() {
                         0xFF9900,
                         0x0066FF,
                         0xFFFF00,
-                        0xFFFFFF];
+                        0xB82E00];
   var groupY = -20;
 
   for(var trackNumber=0; trackNumber<trackCount; trackNumber++) {

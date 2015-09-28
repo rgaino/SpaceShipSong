@@ -13,6 +13,7 @@ var tracks = [
               'audio/percussion.mp3'
             ];
 
+var FFTSIZE = 32;
 var trackCount = tracks.length;
 var audioSources = [trackCount];
 var analyserNodes = [trackCount];
@@ -21,9 +22,11 @@ var freqByteData = [trackCount];
 var timeByteData  = [trackCount];
 var loadedCount = 0;
 
-
 for(var trackNumber=0; trackNumber<trackCount; trackNumber++) {
   loadSound(tracks[trackNumber], trackNumber);
+  freqFloatData[trackNumber] = new Float32Array(FFTSIZE/2);
+  freqByteData[trackNumber]  = new Uint8Array(FFTSIZE/2);
+  timeByteData[trackNumber]  = new Uint8Array(FFTSIZE/2);
 }
 
 function loadSound(url, trackNumber) {
@@ -41,7 +44,7 @@ function loadSound(url, trackNumber) {
   		audioSources[trackNumber].buffer = buffer;
 
   		analyserNodes[trackNumber] = context.createAnalyser();
-  		analyserNodes[trackNumber].fftSize = 32;
+  		analyserNodes[trackNumber].fftSize = FFTSIZE;
   		analyserNodes[trackNumber].smoothingTimeConstant = 0.85;
 
   		audioSources[trackNumber].connect(analyserNodes[trackNumber]);
@@ -69,7 +72,7 @@ function playSound() {
 		audioSources[i].start(0);
 	}
 
-  createScene();
+  // createScene();
 
 }
 
@@ -94,5 +97,4 @@ function getAverage(array) {
 function log() {
   console.log("Log at ", new Date());
   console.log( freqByteData );
-  console.log( scene );
 }
