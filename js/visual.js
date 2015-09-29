@@ -50,14 +50,14 @@ function createScene() {
     xPosition += (xPositionOffset + cube.scale.x);
 
     var textParams = {
-            					size: 2,
+            					size: 1.2,
             					height: 1,
             					curveSegments: 2,
             					font: "helvetiker"
             				};
 
     //track name in 3D text, using same material as frequency bars
-    var trackNameGeometry = new THREE.TextGeometry(trackViewNames[trackNumber], textParams);
+    var trackNameGeometry = new THREE.TextGeometry(trackViewNames[trackNumber].toUpperCase(), textParams);
     var text3D = new THREE.Mesh( trackNameGeometry, material );
     text3D.position.x = xPosition;
     text3D.position.y = groupY;
