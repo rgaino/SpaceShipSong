@@ -32,7 +32,7 @@ function createScene() {
     group.name = trackNumber;
 
     var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-    var material = new THREE.MeshBasicMaterial( { color: trackViewColor[trackNumber] } );
+    var material = new THREE.MeshLambertMaterial( { color: trackViewColor[trackNumber] } );
     var xPosition = -10;
     var xPositionOffset = 0.5;
 
@@ -56,9 +56,9 @@ function createScene() {
             					font: "helvetiker"
             				};
 
+    //track name in 3D text, using same material as frequency bars
     var trackNameGeometry = new THREE.TextGeometry(trackViewNames[trackNumber], textParams);
-    var textMaterial = new THREE.MeshBasicMaterial( { color: trackViewColor[trackNumber] } );
-    var text3D = new THREE.Mesh( trackNameGeometry, textMaterial );
+    var text3D = new THREE.Mesh( trackNameGeometry, material );
     text3D.position.x = xPosition;
     text3D.position.y = groupY;
 
@@ -69,6 +69,11 @@ function createScene() {
     scene.add(group);
     groupY += 10;
   }
+
+  // LIGHT
+	var light = new THREE.PointLight(0xffffff);
+	light.position.set(0,150,100);
+	scene.add(light);
 
   camera.position.z = 50;
   controls = new THREE.OrbitControls(camera, document, renderer.domElement);
