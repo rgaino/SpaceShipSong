@@ -18,21 +18,31 @@ function createScene() {
   var trackViewColor = [0x00FF00, 0xFF66FF, 0xFF9900,       0x0066FF,     0x000033,      0xB82E00];
   var trackViewNames = ['drums',  'bass',   'base guitar', 'lead guitar', 'solo guitar', 'percussion'];
 
-  var groupY = -25;
+  var originalGroupY = -5;
+  var groupY = originalGroupY;
 
   for(var trackNumber=0; trackNumber<trackCount; trackNumber++) {
 
-    console.log("Creating 3D objects for " + trackViewNames[trackNumber] + " track");
+    var xPosition = -45;
+    var xPositionOffset = 0.5;
+
+    //beginning of a new column of tracks
+    if(trackNumber == (trackCount/2)) {
+      groupY = originalGroupY;
+    }
+
+    //for every column on the second half of track number
+    if(trackNumber >= trackCount/2) {
+      xPosition = 5;
+    }
+
+    console.log("Creating 3D objects for " + trackViewNames[trackNumber] + " track at " + xPosition + ',' + groupY);
 
     var switchSphereGeometry = new THREE.SphereGeometry( 1, 32, 32 );
     var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-
     var material = new THREE.MeshLambertMaterial( { color: trackViewColor[trackNumber] } );
-
-    var xPosition = -10;
-    var xPositionOffset = 0.5;
-
     var sphere = new THREE.Mesh( switchSphereGeometry, material );
+
     sphere.trackNumber = trackNumber;
     sphere.position.y = groupY;
     sphere.position.x = xPosition;
@@ -40,7 +50,6 @@ function createScene() {
     domEvents.addEventListener(sphere, 'click', switchClick, false)
 
     xPosition += (xPositionOffset + (sphere.scale.x*3));
-
 
     for(var i=0; i<=freqByteData[trackNumber].length; i++) {
       var cube = new THREE.Mesh( geometry, material );
@@ -54,10 +63,9 @@ function createScene() {
     xPosition += (xPositionOffset + cube.scale.x);
 
     //track name in 3D text, using same material as frequency bars
-    var textParams = { size: 1.2, height: 1, curveSegments: 2, font: "helvetiker" };
-    var textMaterial = new THREE.MeshLambertMaterial( { color: trackViewColor[trackNumber] } );
+    var textParams = { size: 1.2, height: 0.1, curveSegments: 2, font: "helvetiker" };
     var trackNameGeometry = new THREE.TextGeometry(trackViewNames[trackNumber].toUpperCase(), textParams);
-    var text3D = new THREE.Mesh( trackNameGeometry, textMaterial );
+    var text3D = new THREE.Mesh( trackNameGeometry, material );
     text3D.position.x = xPosition;
     text3D.position.y = groupY;
     text3D.text = trackViewNames[trackNumber].toUpperCase();
@@ -71,7 +79,7 @@ function createScene() {
 	light.position.set(0,150,100);
 	scene.add(light);
 
-  camera.position.z = 50;
+  camera.position.z = 40;
   controls = new THREE.OrbitControls(camera, document, renderer.domElement);
 
   var render = function () {
