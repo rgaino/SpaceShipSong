@@ -1,13 +1,19 @@
+var renderer;
+var camera;
+var scene;
 
 function createScene() {
 
   //setup Threejs scene, camera and renderer
-  var scene = new THREE.Scene();
-  var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
-  var renderer = new THREE.WebGLRenderer();
+   scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+  renderer = new THREE.WebGLRenderer();
   renderer.setClearColor( 0xEBF0F5 );
   renderer.setSize( window.innerWidth, window.innerHeight );
+
   document.body.appendChild( renderer.domElement );
+  window.addEventListener( 'resize', onWindowResize, false );
+  var domEvents   = new THREEx.DomEvents(camera, renderer.domElement)
 
   var trackViewColor = [0x00FF00, 0xFF66FF, 0xFF9900,       0x0066FF,     0x000033,      0xB82E00];
   var trackViewNames = ['drums',  'bass',   'base guitar', 'lead guitar', 'solo guitar', 'percussion'];
@@ -16,12 +22,25 @@ function createScene() {
 
   for(var trackNumber=0; trackNumber<trackCount; trackNumber++) {
 
-    console.log("Creating track view group " + trackNumber);
+    console.log("Creating 3D objects for " + trackViewNames[trackNumber] + "track");
 
+    var switchSphereGeometry = new THREE.SphereGeometry( 1, 32, 32 );
     var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+
     var material = new THREE.MeshLambertMaterial( { color: trackViewColor[trackNumber] } );
+
     var xPosition = -10;
     var xPositionOffset = 0.5;
+
+    var sphere = new THREE.Mesh( switchSphereGeometry, material );
+    sphere.trackNumber = trackNumber;
+    sphere.position.y = groupY;
+    sphere.position.x = xPosition;
+    scene.add(sphere);
+    domEvents.addEventListener(sphere, 'click', switchClick, false)
+
+    xPosition += (xPositionOffset + (sphere.scale.x*3));
+
 
     for(var i=0; i<=freqByteData[trackNumber].length; i++) {
       var cube = new THREE.Mesh( geometry, material );
@@ -41,12 +60,13 @@ function createScene() {
     var text3D = new THREE.Mesh( trackNameGeometry, textMaterial );
     text3D.position.x = xPosition;
     text3D.position.y = groupY;
+    text3D.text = trackViewNames[trackNumber].toUpperCase();
     scene.add(text3D);
 
     groupY += 10;
   }
 
-  // LIGHT
+  //Add some lighting
 	var light = new THREE.PointLight(0xffffff);
 	light.position.set(0,150,100);
 	scene.add(light);
@@ -71,4 +91,22 @@ function createScene() {
   };
 
   render();
+}
+
+function switchClick(event) {
+  //mute and unmute track
+  if(gainNodes[event.target.trackNumber].gain.value == 0) {
+    gainNodes[event.target.trackNumber].gain.value = 1;
+  } else {
+    gainNodes[event.target.trackNumber].gain.value = 0;
+  }
+}
+
+function onWindowResize() {
+
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
 }

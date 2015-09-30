@@ -16,6 +16,7 @@ var tracks = [
 var FFTSIZE = 32;
 var trackCount = tracks.length;
 var audioSources = [trackCount];
+var gainNodes = [trackCount];
 var analyserNodes = [trackCount];
 var freqFloatData  = [trackCount];
 var freqByteData = [trackCount];
@@ -43,13 +44,20 @@ function loadSound(url, trackNumber) {
   		audioSources[trackNumber] = context.createBufferSource();
   		audioSources[trackNumber].buffer = buffer;
 
+      //the gain node (which should come first so the visualization doesn't show the track info when muted)
+      gainNodes[trackNumber] = context.createGain();
+
+      //the Analyser node
   		analyserNodes[trackNumber] = context.createAnalyser();
   		analyserNodes[trackNumber].fftSize = FFTSIZE;
   		analyserNodes[trackNumber].smoothingTimeConstant = 0.85;
 
-  		audioSources[trackNumber].connect(analyserNodes[trackNumber]);
+      //connect souce -> gain -> analyser -> destination
+  		audioSources[trackNumber].connect(gainNodes[trackNumber]);
+      gainNodes[trackNumber].connect(analyserNodes[trackNumber]);
   		analyserNodes[trackNumber].connect(context.destination);
 
+      //initialize arrays to hold the track frequency data
   		freqFloatData[trackNumber] = new Float32Array(analyserNodes[trackNumber].frequencyBinCount);
   		freqByteData[trackNumber]  = new Uint8Array(analyserNodes[trackNumber].frequencyBinCount);
   		timeByteData[trackNumber]  = new Uint8Array(analyserNodes[trackNumber].frequencyBinCount);
@@ -71,9 +79,6 @@ function playSound() {
 		console.log("Starting audio file " + i);
 		audioSources[i].start(0);
 	}
-
-  // createScene();
-
 }
 
 function tick() {
