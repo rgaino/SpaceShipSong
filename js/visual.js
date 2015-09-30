@@ -22,7 +22,7 @@ function createScene() {
 
   for(var trackNumber=0; trackNumber<trackCount; trackNumber++) {
 
-    console.log("Creating 3D objects for " + trackViewNames[trackNumber] + "track");
+    console.log("Creating 3D objects for " + trackViewNames[trackNumber] + " track");
 
     var switchSphereGeometry = new THREE.SphereGeometry( 1, 32, 32 );
     var geometry = new THREE.BoxGeometry( 1, 1, 1 );
