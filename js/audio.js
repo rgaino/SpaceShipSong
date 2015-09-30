@@ -37,8 +37,8 @@ function loadSound(url, trackNumber) {
   // Decode asynchronously
   request.onload = function() {
     context.decodeAudioData(request.response, function(buffer) {
-  		loadedCount++;
   		console.log("loaded track number " + trackNumber + ", loaded count: " + loadedCount);
+      loadedCount++;
 
   		audioSources[trackNumber] = context.createBufferSource();
   		audioSources[trackNumber].buffer = buffer;
