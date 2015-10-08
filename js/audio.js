@@ -23,14 +23,15 @@ var freqByteData = [trackCount];
 var timeByteData  = [trackCount];
 var loadedCount = 0;
 
-for(var trackNumber=0; trackNumber<trackCount; trackNumber++) {
-  loadSound(tracks[trackNumber], trackNumber);
-  freqFloatData[trackNumber] = new Float32Array(FFTSIZE/2);
-  freqByteData[trackNumber]  = new Uint8Array(FFTSIZE/2);
-  timeByteData[trackNumber]  = new Uint8Array(FFTSIZE/2);
+function loadAudio() {
+  for(var trackNumber=0; trackNumber<trackCount; trackNumber++) {
+    loadTrack(tracks[trackNumber], trackNumber);
+    freqFloatData[trackNumber] = new Float32Array(FFTSIZE/2);
+    freqByteData[trackNumber]  = new Uint8Array(FFTSIZE/2);
+    timeByteData[trackNumber]  = new Uint8Array(FFTSIZE/2);
+  }
 }
-
-function loadSound(url, trackNumber) {
+function loadTrack(url, trackNumber) {
   var request = new XMLHttpRequest();
   request.open('GET', url, true);
   request.responseType = 'arraybuffer';
@@ -63,7 +64,8 @@ function loadSound(url, trackNumber) {
   		timeByteData[trackNumber]  = new Uint8Array(analyserNodes[trackNumber].frequencyBinCount);
 
       if(loadedCount == trackCount) {
-  			document.getElementById("playButton").disabled = false;
+        playVisual();
+        playSound();
   		}
     });
   }

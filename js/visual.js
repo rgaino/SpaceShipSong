@@ -1,6 +1,8 @@
 var renderer;
 var camera;
 var scene;
+var domEvents;
+var loadingText3D;
 
 function createScene() {
 
@@ -13,7 +15,33 @@ function createScene() {
 
   document.body.appendChild( renderer.domElement );
   window.addEventListener( 'resize', onWindowResize, false );
-  var domEvents   = new THREEx.DomEvents(camera, renderer.domElement)
+  domEvents = new THREEx.DomEvents(camera, renderer.domElement)
+
+  //Add some lighting
+	var light = new THREE.PointLight(0xffffff);
+	light.position.set(0,150,100);
+	scene.add(light);
+
+  camera.position.z = 40;
+  controls = new THREE.OrbitControls(camera, document, renderer.domElement);
+
+  //track name in 3D text, using same material as frequency bars
+  var textParams = { size: 2, height: 0.1, curveSegments: 2, font: "helvetiker" };
+  var loadingTextMaterial = new THREE.MeshLambertMaterial( { color: 0x0066FF } );
+  var loadingTextGeometry = new THREE.TextGeometry("LOADING...", textParams);
+  loadingText3D = new THREE.Mesh( loadingTextGeometry, loadingTextMaterial );
+  loadingTextGeometry.center()
+  loadingText3D.position.x = 0;
+  loadingText3D.position.y = 0
+  scene.add(loadingText3D);
+  renderer.render(scene, camera);
+
+  loadAudio();
+}
+
+function playVisual() {
+
+  scene.remove(loadingText3D);
 
   var trackViewColor = [0x00FF00, 0xFF66FF, 0xFF9900,       0x0066FF,     0x000033,      0xB82E00];
   var trackViewNames = ['drums',  'bass',   'base guitar', 'lead guitar', 'solo guitar', 'percussion'];
@@ -74,13 +102,6 @@ function createScene() {
     groupY += 10;
   }
 
-  //Add some lighting
-	var light = new THREE.PointLight(0xffffff);
-	light.position.set(0,150,100);
-	scene.add(light);
-
-  camera.position.z = 40;
-  controls = new THREE.OrbitControls(camera, document, renderer.domElement);
 
   var render = function () {
 
