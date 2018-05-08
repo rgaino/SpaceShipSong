@@ -7,7 +7,7 @@ var loadingText3D;
 function createScene() {
 
   //setup Threejs scene, camera and renderer
-   scene = new THREE.Scene();
+  scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
   renderer = new THREE.WebGLRenderer();
   renderer.setClearColor( 0xEBF0F5 );
